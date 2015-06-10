@@ -120,23 +120,25 @@ namespace AzureStorageExplorer
         {
             if (AccountList.SelectedIndex==-1 | AccountList.SelectedIndex==0) return;
 
-            int index = AccountList.SelectedIndex-1;
+            //reason being we have --select a storage account-- and (all) entries in drop down
+            //Hence need to remove 2 from over all selected index
+            int index = AccountList.SelectedIndex - 2;
 
             String accountName = Accounts[index].Name;
 
             // Confirm removal of storage account.
 
-            if (System.Windows.MessageBox.Show("Are you sure you want to remove '" + accountName + "' from your list of storage accounts?", "Confirm Remove Storage Account", MessageBoxButton.YesNo)==MessageBoxResult.Yes)
-            { 
+            if (System.Windows.MessageBox.Show("Are you sure you want to remove '" + accountName + "' from your list of storage accounts?", "Confirm Remove Storage Account", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
                 // If account is currently displayed, removed its tab.
 
                 if (StorageViewsTabControl.Items != null)
                 {
-                    foreach(TabItem item in StorageViewsTabControl.Items)
+                    foreach (TabItem item in StorageViewsTabControl.Items)
                     {
                         StorageView view = item.Content as StorageView;
-                        if (view != null && view.Account.Name==accountName)
-                        { 
+                        if (view != null && view.Account.Name == accountName)
+                        {
                             StorageViewsTabControl.Items.Remove(item);
                             break;
                         }
