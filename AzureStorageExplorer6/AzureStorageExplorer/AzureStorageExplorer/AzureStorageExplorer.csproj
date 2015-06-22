@@ -103,6 +103,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Table.cs" />
+    <Compile Include="Queue.cs" />
+    <Compile Include="Blob.cs" />
     <Compile Include="Dialogs\ContentTypesDialog.xaml.cs">
       <DependentUpon>ContentTypesDialog.xaml</DependentUpon>
     </Compile>
@@ -151,6 +154,8 @@
     <Compile Include="Dialogs\NewContainerDialog.xaml.cs">
       <DependentUpon>NewContainerDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ExtendedStorageView.cs" />
+    <Compile Include="Helpers\AccountHelper.cs" />
     <Compile Include="Helpers\Crypto.cs" />
     <Compile Include="Models\Action.cs" />
     <Compile Include="Models\MessageItem.cs" />

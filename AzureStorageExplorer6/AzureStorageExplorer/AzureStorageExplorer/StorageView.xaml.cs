@@ -30,6 +30,7 @@ using System.ComponentModel;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Web.Script.Serialization;
+using AzureStorageExplorer.Helpers;
 
 namespace AzureStorageExplorer
 {
@@ -104,16 +105,20 @@ namespace AzureStorageExplorer
         private String[] EntityQueryColumnName = null;
         private String[] EntityQueryCondition = null;
         private String[] EntityQueryValue = null;
-        
+
         #endregion
 
         #region Initialization
 
-        public StorageView()
+        private ExtendedStorageView storage;
+
+        public StorageView(ExtendedStorageView storage)
         {
             InitializeComponent();
             LoadDefaultBlobFilter();
             LoadDefaultEntityFilter();
+
+            this.storage = storage;
         }
 
         //******************
@@ -129,7 +134,7 @@ namespace AzureStorageExplorer
 
             NewAction();
 
-            AccountTitle.Text = Account.Name;
+            AccountTitle.Text = storage.AccountName;
 
             ClearMainPane();
 
@@ -169,15 +174,15 @@ namespace AzureStorageExplorer
             AccountTreeView.Items.Add(queueSection);
             AccountTreeView.Items.Add(tableSection);
 
-            CloudStorageAccount account = OpenStorageAccount();
+            //CloudStorageAccount account = OpenStorageAccount();
 
-            blobClient = account.CreateCloudBlobClient();
-            tableClient = account.CreateCloudTableClient();
-            queueClient = account.CreateCloudQueueClient();
+            //blobClient = account.CreateCloudBlobClient();
+            //tableClient = account.CreateCloudTableClient();
+            //queueClient = account.CreateCloudQueueClient();
 
             try
-            { 
-                var serviceProperties = blobClient.GetServiceProperties();
+            {
+                var serviceProperties = storage.BlobProperties;
 
                 if (serviceProperties.Cors.CorsRules.Count == 0)
                 {
@@ -198,42 +203,44 @@ namespace AzureStorageExplorer
             try
             {
                 // Check for $logs container and add it if present ($logs is not included in the general ListContainers call).
-                
-                CloudBlobContainer logsContainer = blobClient.GetContainerReference("$logs");
-                if (logsContainer.Exists())
-                {
-                    StackPanel stack = new StackPanel();
-                    stack.Orientation = Orientation.Horizontal;
 
-                    Image cloudFolderImage = new Image();
-                    cloudFolderImage.Source = new BitmapImage(new Uri("pack://application:,,/Images/cloud_folder.png"));
-                    cloudFolderImage.Height = 24;
+                //CloudBlobContainer logsContainer = storage.LogContainer;
 
-                    Label label = new Label();
-                    label.Content = logsContainer.Name;
+                //if (logsContainer.Exists())
+                //{
+                //    StackPanel stack = new StackPanel();
+                //    stack.Orientation = Orientation.Horizontal;
 
-                    stack.Children.Add(cloudFolderImage);
-                    stack.Children.Add(label);
+                //    Image cloudFolderImage = new Image();
+                //    cloudFolderImage.Source = new BitmapImage(new Uri("pack://application:,,/Images/cloud_folder.png"));
+                //    cloudFolderImage.Height = 24;
 
-                    TreeViewItem blobItem = new TreeViewItem()
-                    {
-                        Header = stack,
-                        Tag = new OutlineItem()
-                        {
-                            ItemType = ItemType.BLOB_CONTAINER,
-                            Container = logsContainer.Name,
-                            Permissions = logsContainer.GetPermissions()
-                        }
-                    };
-                    blobSection.Items.Add(blobItem);
-                }
+                //    Label label = new Label();
+                //    label.Content = logsContainer.Name;
 
-                IEnumerable<CloudBlobContainer> containers = blobClient.ListContainers();
+                //    stack.Children.Add(cloudFolderImage);
+                //    stack.Children.Add(label);
+
+                //    TreeViewItem blobItem = new TreeViewItem()
+                //    {
+                //        Header = stack,
+                //        Tag = new OutlineItem()
+                //        {
+                //            ItemType = ItemType.BLOB_CONTAINER,
+                //            Container = logsContainer.Name,
+                //            Permissions = logsContainer.GetPermissions()
+                //        }
+                //    };
+                //    blobSection.Items.Add(blobItem);
+                //}
+
+                var containers = storage.Containers;
+
                 if (containers != null)
                 {
                     if (containers != null)
                     {
-                        foreach (CloudBlobContainer container in containers)
+                        foreach (Blob container in containers)
                         {
                             StackPanel stack = new StackPanel();
                             stack.Orientation = Orientation.Horizontal;
@@ -255,7 +262,7 @@ namespace AzureStorageExplorer
                                 {
                                     ItemType = ItemType.BLOB_CONTAINER,
                                     Container = container.Name,
-                                    Permissions = container.GetPermissions()
+                                    Permissions = container.Permissions
                                 }
                             };
                             blobSection.Items.Add(blobItem);
@@ -291,12 +298,12 @@ namespace AzureStorageExplorer
             }
 
             try
-            { 
-                IEnumerable<CloudQueue> queues = queueClient.ListQueues();
+            {
+                var queues = storage.Queues;
 
                 if (queues != null)
                 {
-                    foreach (CloudQueue queue in queues)
+                    foreach (Queue queue in queues)
                     {
                         StackPanel stack = new StackPanel();
                         stack.Orientation = Orientation.Horizontal;
@@ -334,10 +341,10 @@ namespace AzureStorageExplorer
 
             try
             {
-                IEnumerable<CloudTable> tables = tableClient.ListTables();
+                var tables = storage.Tables;
                 if (tables != null)
                 {
-                    foreach (CloudTable table in tables)
+                    foreach (Table table in tables)
                     {
                         StackPanel stack = new StackPanel();
                         stack.Orientation = Orientation.Horizontal;
@@ -864,11 +871,27 @@ namespace AzureStorageExplorer
             Cursor = Cursors.Wait;
 
             NewAction();
+            AccountHelper.LoadAccountData();
 
-            LoadLeftPane();
+            var azureAccount = AccountHelper.GetAzureAccountByName(storage.AccountName);
+
+            if (azureAccount != null)
+            { 
+                storage.LoadAccountDetails(azureAccount);
+
+                SyncAccountDetails();
+
+                LoadLeftPane();
+            }
 
             Cursor = Cursors.Arrow;
         }
+
+        private void SyncAccountDetails()
+        {
+            throw new NotImplementedException();
+        }
+
 
 
         //************************
@@ -920,7 +943,7 @@ namespace AzureStorageExplorer
                         }
                         CloudBlobContainer container = blobClient.GetContainerReference(containerName);
                         container.CreateIfNotExists();
-
+                        
                         BlobContainerPermissions permissions = container.GetPermissions();
                         switch (accessLevel)
                         {

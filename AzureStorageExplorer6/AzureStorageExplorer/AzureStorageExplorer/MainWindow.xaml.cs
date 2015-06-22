@@ -25,7 +25,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Forms;
 using AzureStorageExplorer.Helpers;
-using System.Windows;
+using Newtonsoft.Json;
+
 namespace AzureStorageExplorer
 {
     /// <summary>
@@ -38,6 +39,7 @@ namespace AzureStorageExplorer
         private const String cipherKey = "lkjsojkweu798ynfgs";
 
         public static List<AzureAccount> Accounts = null;
+        public static List<ExtendedStorageView> AccountData = null;
         public static System.Windows.Controls.TabControl StorageViewsTabControl = null;
         public static Dictionary<String, String> ContentTypes = new Dictionary<string, string>();
 
@@ -53,7 +55,8 @@ namespace AzureStorageExplorer
             StorageViewsTabControl = StorageViews;
             Accounts = new List<AzureAccount>();
             CenterWindowOnScreen();
-            LoadAccountList();
+            Accounts = AccountHelper.LoadAccountList();
+            AccountData = AccountHelper.LoadAccountData();
             LoadContentTypes();
             DisplayAccountList();
         }
@@ -100,7 +103,13 @@ namespace AzureStorageExplorer
 
                 Accounts.Add(account);
 
-                SaveAccountList();
+                AccountHelper.SaveAccountList(Accounts);
+
+                ExtendedStorageView storage = AccountHelper.GetCloudAccountDetails(account.Name);
+
+                AccountData.Add(storage);
+
+                AccountHelper.SaveAccountData(AccountData);
 
                 DisplayAccountList();
 
@@ -108,6 +117,8 @@ namespace AzureStorageExplorer
 
             }
         }
+
+        
 
         //*************************
         //*                       *
@@ -152,7 +163,7 @@ namespace AzureStorageExplorer
                 AccountList.SelectedIndex = -1;
                 Accounts.RemoveAt(index);
 
-                SaveAccountList();
+                AccountHelper.SaveAccountList(Accounts);
 
                 Cursor = System.Windows.Input.Cursors.Arrow;
             }
@@ -173,22 +184,12 @@ namespace AzureStorageExplorer
             AccountMessage.Visibility = Visibility.Visible;
             AccountAction.Visibility = Visibility.Visible;
 
-            AzureAccount account = null;
-
             // Find the selected account name in the account list.
+            var storage = AccountData.Find(accountData => accountData.AccountName.Equals(accountName, StringComparison.OrdinalIgnoreCase));
 
-            foreach (AzureAccount acct in Accounts)
-            {
-                if (acct.Name == accountName)
-                {
-                    account = acct;
-                }
-            }
-
-            if (account == null) return;
+            if (storage == null) return;
 
             // Check that the account isn't already in a tab; if it is, do nothing.
-
             if (StorageViewsTabControl.Items != null)
             {
                 foreach (TabItem item in StorageViewsTabControl.Items)
@@ -215,22 +216,23 @@ namespace AzureStorageExplorer
 
                 StackPanel panel = new StackPanel();
                 panel.Orientation = System.Windows.Controls.Orientation.Horizontal;
-                TextBlock title = new TextBlock() { Text = account.Name + " " };
+                TextBlock title = new TextBlock() { Text = storage.AccountName + " " };
                 panel.Children.Add(title);
                 TextBlock closeBox = new TextBlock() { Text = "×" };
-                closeBox.Tag = account.Name;
+                closeBox.Tag = storage.AccountName;
                 closeBox.Cursor = System.Windows.Input.Cursors.Hand;
                 closeBox.MouseDown += new MouseButtonEventHandler(CloseStorageView);
                 panel.Children.Add(closeBox);
                 item.Header = panel;
-                StorageView storageView = new StorageView();
 
-                storageView.Account = account;
+                StorageView storageView = new StorageView(storage);
+
+                storageView.Account = new AzureAccount { Name = storage.AccountName };
                 item.Content = storageView;
 
                 storageView.LoadLeftPane();
 
-                item.Content = storageView; ;
+                item.Content = storageView;
 
                 StorageViews.Items.Add(item);
 
@@ -286,115 +288,7 @@ namespace AzureStorageExplorer
         }
 
 
-        //*********************
-        //*                   *
-        //*  LoadAccountList  *
-        //*                   *
-        //*********************
-        // Load the account list combo box.
-
-        private void LoadAccountList()
-        {
-            String filename = System.Windows.Forms.Application.UserAppDataPath + "\\AzureStorageExplorer6.dt1";
-
-            Accounts.Clear();
-
-            if (File.Exists(filename))
-            {
-                using (TextReader reader = File.OpenText(filename))
-                {
-                    reader.ReadLine();  // version
-
-                    String line;
-                    String[] items;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        try
-                        {
-                            line = StringCipher.Decrypt(line, cipherKey);
-
-                            items = line.Split('|');
-                            if (items.Length >= 4)
-                            {
-                                AzureAccount account = new AzureAccount()
-                                {
-                                    Name = items[0],
-                                    Key = items[1],
-                                    IsDeveloperAccount = (items[2] == "1"),
-                                    UseSSL = (items[3] == "1")
-                                };
-                                if (items.Length >= 5)
-                                {
-                                    account.EndpointDomain = items[4];
-                                }
-                                else
-                                {
-                                    account.EndpointDomain = "core.windows.net";
-                                }
-                                Accounts.Add(account);
-                            }
-                        }
-                        catch(Exception)
-                        {
-                            // If something is wrong in the account data file, don't let that stop the rest from loading.
-                        }
-                    }
-                }
-            }
-        }
-
-
-        //*********************
-        //*                   *
-        //*  SaveAccountList  *
-        //*                   *
-        //*********************
-        // Save the account list to disk.
-
-        private void SaveAccountList()
-        {
-            // Sort account list.
-
-            Accounts = Accounts.OrderBy(o => o.Name).ToList();
-
-            // Save account list, encrypted.
-
-            String filename = System.Windows.Forms.Application.UserAppDataPath + "\\AzureStorageExplorer6.dt1";
-
-            using (TextWriter writer = File.CreateText(filename))
-            {
-                writer.WriteLine("v6.0-1");
-                foreach (AzureAccount account in Accounts)
-                {
-                    String line = account.Name + "|";
-                    line = line + account.Key + "|";
-
-                    if (account.IsDeveloperAccount)
-                    {
-                        line = line + "1|";
-                    }
-                    else
-                    {
-                        line = line + "0|";
-                    }
-
-                    if (account.UseSSL)
-                    {
-                        line = line + "1|";
-                    }
-                    else
-                    {
-                        line = line + "0|";
-                    }
-
-                    line = line + account.EndpointDomain + "|";
-                    line = StringCipher.Encrypt(line, cipherKey);
-
-                    writer.WriteLine(line);
-
-                }
-            }
-        }
+        
 
 
         //**************************

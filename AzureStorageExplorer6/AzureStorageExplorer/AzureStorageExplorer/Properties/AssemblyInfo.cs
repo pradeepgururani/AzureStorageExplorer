@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyTitle("AzureStorageExplorer")]
 [assembly: AssemblyDescription("Microsoft Azure Storage Management Tool")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Neudesic")]
+[assembly: AssemblyCompany("Aditi")]
 [assembly: AssemblyProduct("AzureStorageExplorer")]
 [assembly: AssemblyCopyright("Open Source Freeware")]
 [assembly: AssemblyTrademark("")]
