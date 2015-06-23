@@ -119,6 +119,8 @@ namespace AzureStorageExplorer
             LoadDefaultEntityFilter();
 
             this.storage = storage;
+
+            Account = AccountHelper.GetAzureAccountByName(storage.AccountName);
         }
 
         //******************
@@ -174,11 +176,11 @@ namespace AzureStorageExplorer
             AccountTreeView.Items.Add(queueSection);
             AccountTreeView.Items.Add(tableSection);
 
-            //CloudStorageAccount account = OpenStorageAccount();
+            CloudStorageAccount account = OpenStorageAccount();
 
-            //blobClient = account.CreateCloudBlobClient();
-            //tableClient = account.CreateCloudTableClient();
-            //queueClient = account.CreateCloudQueueClient();
+            blobClient = account.CreateCloudBlobClient();
+            tableClient = account.CreateCloudTableClient();
+            queueClient = account.CreateCloudQueueClient();
 
             try
             {
@@ -203,7 +205,7 @@ namespace AzureStorageExplorer
             try
             {
                 // Check for $logs container and add it if present ($logs is not included in the general ListContainers call).
-
+                //TODO:Open this loag container thing later on
                 //CloudBlobContainer logsContainer = storage.LogContainer;
 
                 //if (logsContainer.Exists())

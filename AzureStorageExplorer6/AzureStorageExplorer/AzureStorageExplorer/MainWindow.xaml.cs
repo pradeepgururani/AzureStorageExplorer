@@ -227,7 +227,6 @@ namespace AzureStorageExplorer
 
                 StorageView storageView = new StorageView(storage);
 
-                storageView.Account = new AzureAccount { Name = storage.AccountName };
                 item.Content = storageView;
 
                 storageView.LoadLeftPane();
