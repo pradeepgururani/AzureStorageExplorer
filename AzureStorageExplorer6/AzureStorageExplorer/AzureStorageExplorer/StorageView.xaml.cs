@@ -417,6 +417,7 @@ namespace AzureStorageExplorer
             ContainerToolbarPanel.Visibility = Visibility.Collapsed;
             BlobToolbarPanel.Visibility = Visibility.Collapsed;
             EntityToolbarPanel.Visibility = Visibility.Collapsed;
+            QueryPanel.Visibility = Visibility.Collapsed;
             ContainerPanel.Visibility = Visibility.Collapsed;
             ContainerListView.Visibility = Visibility.Collapsed;
 
@@ -3714,6 +3715,7 @@ namespace AzureStorageExplorer
                 _EntityCollection.Clear();
                 TableListView.Visibility = Visibility.Visible;
                 EntityToolbarPanel.Visibility = Visibility.Visible;
+                QueryPanel.Visibility = Visibility.Visible;
 
                 CloudTable table = tableClient.GetTableReference(tableName);
 

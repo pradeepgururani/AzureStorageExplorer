@@ -138,11 +138,11 @@
         
         <!-- Main Pane -->
 
-        <Grid Grid.Row="2" Grid.Column="1" Background="LightGray">
+        <Grid Grid.Row="4" Grid.Column="1" Background="LightGray">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
@@ -376,6 +376,87 @@
                     </ToolBar>
 
                 </ToolBarTray>
+                
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" x:Name="QueryPanel" Visibility="Collapsed">
+                <Border VerticalAlignment="Top"
+                                Grid.Column="1"
+                                HorizontalAlignment="Stretch" 
+                                Background="Transparent" 
+                                Visibility="{Binding EntityListVisibility}"
+                                >
+                    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Top">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" 
+                                                        HorizontalAlignment="Left" 
+                                                        Orientation="Horizontal" >
+                            <TextBlock Name="QueryLabel" 
+                                                           VerticalAlignment="Center"
+                                                           FontFamily="Calibri" FontSize="12"
+                                                           Text="Query:"
+                                                           Margin="0,0,8,0" />
+                        </StackPanel>
+
+                        <Grid Grid.Column="1"
+                                        Background="White"
+                                        Margin="0,0,16,0"
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                            <TextBlock Name="QueryTextGhost"
+                                               Text="PartitionKey = '1' and RowKey='2'"
+                                               HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                               Foreground="LightGray"
+                                               FontFamily="Calibri" FontSize="12"
+                                               Padding="6,0,0,0"
+                                               />
+                            <TextBox Name="QueryText"
+                                             Background="Transparent"
+                                             HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                                             FontFamily="Calibri" FontSize="12"
+                                             
+                                             />
+                        </Grid>
+
+                        <StackPanel Grid.Column="2" 
+                                                        Orientation="Horizontal"
+                                                        HorizontalAlignment="Right">
+                            <TextBlock Name="MaxRowsLabel" 
+                                                       VerticalAlignment="Center"
+                                                       FontFamily="Calibri" FontSize="12"
+                                                       Text="Max rows to return:"
+                                                       Margin="0,0,8,0" />
+                            <TextBox Name="MaxRowsText"
+                                                     VerticalAlignment="Center"
+                                                     FontFamily="Calibri" FontSize="12"
+                                                     Width="50"
+                                                     Text="2000"
+                                                     Margin="0,0,4,0"
+                                                     />
+                            <Button Name="QueryEntities" IsDefault="True"
+                                            VerticalAlignment="Center"
+                                            Padding="12,2,12,2" Margin="0,0,8,0"
+                                            Content="Query"
+                                            Height="22"
+                                            FontFamily="Calibri" FontSize="12"
+                                             Foreground="Black"
+                                            
+                                            />
+                            <Button Name="DeleteEntities" 
+                                            VerticalAlignment="Center"
+                                            Padding="12,2,12,2" Margin="0,0,0,0"
+                                            Content="Delete"
+                                            Height="22"
+                                            FontFamily="Calibri" FontSize="12"
+                                             Foreground="Black"
+                                            
+                                            />
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </StackPanel>
 
             <ListView Grid.Row="2" x:Name="ContainerListView" 
@@ -444,7 +525,7 @@
                 </ListView.View>
             </ListView>
 
-            <ListView Grid.Row="2" x:Name="TableListView" 
+            <ListView Grid.Row="3" x:Name="TableListView" 
                       GridViewColumnHeader.Click="EntityListView_ColumnHeaderClicked" 
                       MouseDoubleClick="TableListView_MouseDoubleClick"
                       AlternationCount="2" Visibility="Collapsed" ItemsSource="{Binding EntityCollection}">
