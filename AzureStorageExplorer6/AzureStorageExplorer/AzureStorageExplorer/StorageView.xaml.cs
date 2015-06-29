@@ -881,7 +881,7 @@ namespace AzureStorageExplorer
             { 
                 storage.LoadAccountDetails(azureAccount);
 
-                SyncAccountDetails();
+                SyncAccountDetails(storage);
 
                 LoadLeftPane();
             }
@@ -889,9 +889,16 @@ namespace AzureStorageExplorer
             Cursor = Cursors.Arrow;
         }
 
-        private void SyncAccountDetails()
+        private void SyncAccountDetails(ExtendedStorageView storage)
         {
-            throw new NotImplementedException();
+            //First remove the account which is being modified
+            MainWindow.AccountData.RemoveAll(ad => ad.AccountName.Equals(storage.AccountName, StringComparison.OrdinalIgnoreCase));
+
+            //Add the account again to collection with new modified data
+            MainWindow.AccountData.Add(storage);
+
+            //Write it back to persistent store
+            AccountHelper.SaveAccountData(MainWindow.AccountData);
         }
 
 
@@ -960,6 +967,8 @@ namespace AzureStorageExplorer
                                 break;
                         }
                         container.SetPermissions(permissions);
+
+                        AddAndSync(container, Action.ACTION_NEW_CONTAINER);
                     }
                     catch (Exception ex)
                     {
@@ -984,6 +993,64 @@ namespace AzureStorageExplorer
             }
         }
 
+        private void AddAndSync<T>(T container, int actionType)
+        {
+            if (actionType == Action.ACTION_NEW_CONTAINER)
+            {
+                var blob = container as CloudBlobContainer;
+                storage.Containers.Add(new Blob
+                {
+                    Name = blob.Name,
+                    Permissions = blob.GetPermissions(),
+                    PrimaryUri = blob.StorageUri.PrimaryUri,
+                    SecondaryUri = blob.StorageUri.SecondaryUri
+                });
+            }
+            else if (actionType == Action.ACTION_NEW_QUEUE)
+            {
+                var queue = container as CloudQueue;
+                storage.Queues.Add(new Queue
+                {
+                    Name = queue.Name,
+                    PrimaryUri = queue.StorageUri.PrimaryUri,
+                    SecondaryUri = queue.StorageUri.SecondaryUri
+                });
+            }
+            else if (actionType == Action.ACTION_NEW_TABLE)
+            {
+                var table = container as CloudTable;
+                storage.Tables.Add(new Table
+                {
+                    Name = table.Name,
+                    PrimaryUri = table.StorageUri.PrimaryUri,
+                    SecondaryUri = table.StorageUri.SecondaryUri
+                });
+            }
+        }
+
+        private void DeleteAndSync<T>(T container, int actionType)
+        {
+            if (actionType == Action.ACTION_DELETE_CONTAINER)
+            {
+                var blob = container as CloudBlobContainer;
+
+                storage.Containers.RemoveAll(c => c.Name.Equals(blob.Name));
+            }
+            else if (actionType == Action.ACTION_DELETE_QUEUE)
+            {
+                var queue = container as CloudQueue;
+
+                storage.Queues.RemoveAll(q => q.Name.Equals(queue.Name));
+            }
+            else if (actionType == Action.ACTION_DELETE_TABLE)
+            {
+                var table = container as CloudTable;
+
+                storage.Tables.RemoveAll(t => t.Name.Equals(table.Name));
+            }
+
+            SyncAccountDetails(storage);
+        }
 
         //***************************
         //*                         *
@@ -1052,6 +1119,8 @@ namespace AzureStorageExplorer
                         }
                         CloudBlobContainer container = blobClient.GetContainerReference(containerName);
                         container.DeleteIfExists();
+
+                        DeleteAndSync(container, Action.ACTION_DELETE_CONTAINER);
                     }
                     catch (Exception ex)
                     {
@@ -2184,12 +2253,15 @@ namespace AzureStorageExplorer
                         CloudQueue queue = queueClient.GetQueueReference(queueName);
 
                         queue.CreateIfNotExists();
+
+                        AddAndSync(queue, Action.ACTION_NEW_QUEUE);
                     }
                     catch (Exception ex)
                     {
                         isError = true;
                         errorMessage = ex.Message;
                     }
+                    
                     Actions[action.Id].IsCompleted = true;
                 });
 
@@ -2275,8 +2347,10 @@ namespace AzureStorageExplorer
                             CloudStorageAccount account = OpenStorageAccount();
                             queueClient = account.CreateCloudQueueClient();
                         }
-                        CloudQueue queuee = queueClient.GetQueueReference(queueName);
-                        queuee.DeleteIfExists();
+                        CloudQueue queue = queueClient.GetQueueReference(queueName);
+                        queue.DeleteIfExists();
+
+                        DeleteAndSync(queue, Action.ACTION_DELETE_QUEUE);
                     }
                     catch (Exception ex)
                     {
@@ -2542,6 +2616,8 @@ namespace AzureStorageExplorer
                         CloudTable table = tableClient.GetTableReference(tableName);
 
                         table.CreateIfNotExists();
+
+                        AddAndSync(table, Action.ACTION_NEW_TABLE);
                     }
                     catch (Exception ex)
                     {
@@ -2633,6 +2709,8 @@ namespace AzureStorageExplorer
                         }
                         CloudTable table = tableClient.GetTableReference(tableName);
                         table.DeleteIfExists();
+
+                        DeleteAndSync(table, Action.ACTION_DELETE_TABLE);
                     }
                     catch (Exception ex)
                     {
