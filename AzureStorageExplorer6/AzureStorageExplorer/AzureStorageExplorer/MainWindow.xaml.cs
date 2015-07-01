@@ -374,7 +374,7 @@ namespace AzureStorageExplorer
 
         private void MainMenu_About(object sender, System.Windows.RoutedEventArgs e)
         {
-            System.Windows.MessageBox.Show("Azure Storage Explorer 6 Preview 3 (6.0.3.1)", "About");
+            System.Windows.MessageBox.Show("Azure Storage Explorer Beta", "About");
         }
 
 
@@ -421,7 +421,7 @@ namespace AzureStorageExplorer
         {
             try
             {
-                System.Diagnostics.Process.Start("http://azurestorageexplorer.codeplex.com");
+                System.Diagnostics.Process.Start("https://github.com/pradeepgururani/AzureStorageExplorer");
             }
             catch (Exception)
             {
