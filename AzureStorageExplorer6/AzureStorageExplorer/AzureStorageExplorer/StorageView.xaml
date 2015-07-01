@@ -143,7 +143,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0" x:Name="ContainerPanel" Orientation="Horizontal" Background="White">
@@ -320,7 +320,7 @@
                             </StackPanel>
                         </Button>
                     </ToolBar>
-                    <ToolBar Band="1" BandIndex="2">
+                    <!--<ToolBar Band="1" BandIndex="2">
                         <ToggleButton x:Name="EntityQuery" Width="54" ToolBar.OverflowMode="Never" ToolTip="Set Query Conditions" Click="EntityQuery_Click" >
                             <StackPanel Orientation="Vertical">
                                 <Image Source="Images\query.png" Height="16" />
@@ -333,7 +333,7 @@
                                 <TextBlock Text="Filter"/>
                             </StackPanel>
                         </ToggleButton>
-                    </ToolBar>
+                    </ToolBar>-->
                     <ToolBar Band="1" BandIndex="3">
                         <Button x:Name="EntityUploadButton" Width="54" ToolBar.OverflowMode="Never" ToolTip="Upload Entities" Click="EntityUploadButton_Click" >
                             <StackPanel Orientation="Vertical">
@@ -417,7 +417,7 @@
                                              Background="Transparent"
                                              HorizontalAlignment="Stretch" VerticalAlignment="Center"
                                              FontFamily="Calibri" FontSize="12"
-                                             
+                                             TextChanged="QueryText_TextChanged"
                                              />
                         </Grid>
 
@@ -433,7 +433,7 @@
                                                      VerticalAlignment="Center"
                                                      FontFamily="Calibri" FontSize="12"
                                                      Width="50"
-                                                     Text="2000"
+                                                     Text="50"
                                                      Margin="0,0,4,0"
                                                      />
                             <Button Name="QueryEntities" IsDefault="True"
@@ -443,7 +443,7 @@
                                             Height="22"
                                             FontFamily="Calibri" FontSize="12"
                                              Foreground="Black"
-                                            
+                                            Click="QueryEntities_Click"
                                             />
                             <Button Name="DeleteEntities" 
                                             VerticalAlignment="Center"
@@ -452,14 +452,14 @@
                                             Height="22"
                                             FontFamily="Calibri" FontSize="12"
                                              Foreground="Black"
-                                            
+                                            Click="DeleteEntities_Click"
                                             />
                         </StackPanel>
                     </Grid>
                 </Border>
             </StackPanel>
 
-            <ListView Grid.Row="2" x:Name="ContainerListView" 
+            <ListView Grid.Row="3" x:Name="ContainerListView" 
                       GridViewColumnHeader.Click="ContainerListView_ColumnHeaderClicked" 
                       MouseDoubleClick="ContainerListView_MouseDoubleClick"
                       AlternationCount="2" Visibility="Collapsed" ItemsSource="{Binding BlobCollection}">
@@ -493,7 +493,7 @@
                 </ListView.View>
             </ListView>
 
-            <ListView Grid.Row="2" x:Name="MessageListView" 
+            <ListView Grid.Row="3" x:Name="MessageListView" 
                       GridViewColumnHeader.Click="MessageListView_ColumnHeaderClicked" 
                       AlternationCount="2" Visibility="Collapsed" ItemsSource="{Binding MessageCollection}">
                 <ListView.Resources>

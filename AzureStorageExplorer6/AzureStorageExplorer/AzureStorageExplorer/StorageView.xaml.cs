@@ -3042,97 +3042,97 @@ namespace AzureStorageExplorer
 
         private void EntityFilter_Click(object sender, RoutedEventArgs e)
         {
-            NewAction();
+            //NewAction();
 
-            // Initialize the dialog.
+            //// Initialize the dialog.
 
-            EntityFilter dlg = new EntityFilter();
+            //EntityFilter dlg = new EntityFilter();
 
-            dlg.EntitySortHeader = EntitySortHeader;
-            dlg.EntitySortDirection = EntitySortDirection;
+            //dlg.EntitySortHeader = EntitySortHeader;
+            //dlg.EntitySortDirection = EntitySortDirection;
 
-            if (MaxEntityCountFilter != -1)
-            {
-                dlg.MaxEntityCount.Text = MaxEntityCountFilter.ToString();
-            }
-            else
-            {
-                dlg.MaxEntityCount.Text = String.Empty;
-            }
+            //if (MaxEntityCountFilter != -1)
+            //{
+            //    dlg.MaxEntityCount.Text = MaxEntityCountFilter.ToString();
+            //}
+            //else
+            //{
+            //    dlg.MaxEntityCount.Text = String.Empty;
+            //}
 
-            if (EntityTextFilter != null)
-            {
-                dlg.EntityText.Text = EntityTextFilter;
-            }
+            //if (EntityTextFilter != null)
+            //{
+            //    dlg.EntityText.Text = EntityTextFilter;
+            //}
 
-            // Load table columns.
+            //// Load table columns.
 
-            int columnId = 0;
-            List<CheckedListItem> entityColumns = new List<CheckedListItem>();
+            //int columnId = 0;
+            //List<CheckedListItem> entityColumns = new List<CheckedListItem>();
 
-            foreach (KeyValuePair<String, bool> column in TableColumnNames)
-            {
-                entityColumns.Add(new CheckedListItem()
-                {
-                    Id = columnId++,
-                    IsChecked = column.Value,
-                    Name = column.Key
-                });
-            }
-            dlg.SetEntityColumns(entityColumns);
+            //foreach (KeyValuePair<String, bool> column in TableColumnNames)
+            //{
+            //    entityColumns.Add(new CheckedListItem()
+            //    {
+            //        Id = columnId++,
+            //        IsChecked = column.Value,
+            //        Name = column.Key
+            //    });
+            //}
+            //dlg.SetEntityColumns(entityColumns);
 
-            // Display dialog.
+            //// Display dialog.
 
-            if (dlg.ShowDialog().Value)
-            {
-                // Capture updated filter settings.
+            //if (dlg.ShowDialog().Value)
+            //{
+            //    // Capture updated filter settings.
 
-                EntitySortHeader = dlg.EntitySortHeader;
-                EntitySortDirection = dlg.EntitySortDirection;
+            //    EntitySortHeader = dlg.EntitySortHeader;
+            //    EntitySortDirection = dlg.EntitySortDirection;
 
-                MaxEntityCountFilter = -1;
-                if (!String.IsNullOrEmpty(dlg.MaxEntityCount.Text) && Int32.TryParse(dlg.MaxEntityCount.Text, out MaxEntityCountFilter))
-                {
-                    if (MaxEntityCountFilter <= 0)
-                    {
-                        MaxEntityCountFilter = -1;
-                    }
-                }
+            //    MaxEntityCountFilter = -1;
+            //    if (!String.IsNullOrEmpty(dlg.MaxEntityCount.Text) && Int32.TryParse(dlg.MaxEntityCount.Text, out MaxEntityCountFilter))
+            //    {
+            //        if (MaxEntityCountFilter <= 0)
+            //        {
+            //            MaxEntityCountFilter = -1;
+            //        }
+            //    }
 
-                EntityTextFilter = null;
-                if (!String.IsNullOrEmpty(dlg.EntityText.Text))
-                {
-                    EntityTextFilter = dlg.EntityText.Text;
-                }
+            //    EntityTextFilter = null;
+            //    if (!String.IsNullOrEmpty(dlg.EntityText.Text))
+            //    {
+            //        EntityTextFilter = dlg.EntityText.Text;
+            //    }
 
-                if (dlg.EntityColumns != null)
-                {
-                    foreach (CheckedListItem item in dlg.EntityColumns)
-                    {
-                        TableColumnNames[item.Name] = item.IsChecked;
-                    }
-                }
+            //    if (dlg.EntityColumns != null)
+            //    {
+            //        foreach (CheckedListItem item in dlg.EntityColumns)
+            //        {
+            //            TableColumnNames[item.Name] = item.IsChecked;
+            //        }
+            //    }
 
-                if (MaxEntityCountFilter != -1 ||
-                    EntityTextFilter != null ||
-                    !AllTableColumnNamesChecked())
-                {
-                    EntityFilter.IsChecked = true;
-                }
-                else
-                {
-                    EntityFilter.IsChecked = false;
-                }
+            //    if (MaxEntityCountFilter != -1 ||
+            //        EntityTextFilter != null ||
+            //        !AllTableColumnNamesChecked())
+            //    {
+            //        EntityFilter.IsChecked = true;
+            //    }
+            //    else
+            //    {
+            //        EntityFilter.IsChecked = false;
+            //    }
 
-                if (dlg.SaveAsDefaultFilter.IsChecked.Value)
-                {
-                    SaveDefaultEntityFilter();
-                }
+            //    if (dlg.SaveAsDefaultFilter.IsChecked.Value)
+            //    {
+            //        SaveDefaultEntityFilter();
+            //    }
 
-                // Refresh the blob list display with the new filter settings.
+            //    // Refresh the blob list display with the new filter settings.
 
-                ShowTableContainer(SelectedTableContainer);
-            }
+            //    ShowTableContainer(SelectedTableContainer);
+            //}
         }
 
         // Return true if all table column names are checked.
@@ -3689,205 +3689,213 @@ namespace AzureStorageExplorer
         {
             try
             {
-                this.Cursor = Cursors.Wait;
-
                 ContainerDetails.Text = "Loading entity list...";
 
                 TableListView.ItemsSource = null;
 
-                // Create a temporary copy of the TableColumnNames table and add columns as we encounter them.
-                // This is done to prume away previously saved colum names that are no longer present in the data.
-
-                Dictionary<String, bool> tempTableColumnNames = new Dictionary<string, bool>();
-
                 TableListViewGridView.Columns.Clear();
 
-                AddTableListViewColumn("PartitionKey");
-                AddTableListViewColumn("RowKey");
-                AddTableListViewColumn("Timestamp", false);
-
-                tempTableColumnNames.Add("PartitionKey", TableColumnNames["PartitionKey"]);
-                tempTableColumnNames.Add("RowKey", TableColumnNames["RowKey"]);
-                tempTableColumnNames.Add("Timestamp", TableColumnNames["Timestamp"]);
-
-                int containerCount = 0;
-                long containerSize = 0;
                 _EntityCollection.Clear();
                 TableListView.Visibility = Visibility.Visible;
                 EntityToolbarPanel.Visibility = Visibility.Visible;
                 QueryPanel.Visibility = Visibility.Visible;
-
-                CloudTable table = tableClient.GetTableReference(tableName);
-
-                // Query the table and retrieve a collection of entities.
-
-                var query = new TableQuery<ElasticTableEntity>();
-
-                IEnumerable<ElasticTableEntity> entities = null;
-
-                if (EntityQueryEnabled)
-                {
-                    EntityQuery.IsChecked = true;
-
-                    IEnumerable<ElasticTableEntity> q = null;
-
-                    switch (EntityQueryCondition[0])
-                    {
-                        case "equals":
-                            q = table.ExecuteQuery(query).Where(e => e.Value(EntityQueryColumnName[0]) == EntityQueryValue[0]).Select(e => e);
-                            break;
-                        case "does not equal":
-                            q = table.ExecuteQuery(query).Where(e => e.Value(EntityQueryColumnName[0]) != EntityQueryValue[0]).Select(e => e);
-                            break;
-                        case "contains":
-                            q = table.ExecuteQuery(query).Where(e => e.Value(EntityQueryColumnName[0]).Contains(EntityQueryValue[0])).Select(e => e);
-                            break;
-                        case "starts with":
-                            q = table.ExecuteQuery(query).Where(e => e.Value(EntityQueryColumnName[0]).StartsWith(EntityQueryValue[0])).Select(e => e);
-                            break;
-                        case "ends with":
-                            q = table.ExecuteQuery(query).Where(e => e.Value(EntityQueryColumnName[0]).EndsWith(EntityQueryValue[0])).Select(e => e);
-                            break;
-                    }
-
-                    if (EntityQueryColumnName.Length > 1)
-                    {
-                        switch (EntityQueryCondition[1])
-                        {
-                            case "equals":
-                                q = q.Where(e => e.Value(EntityQueryColumnName[1]) == EntityQueryValue[1]);
-                                break;
-                            case "does not equal":
-                                q = q.Where(e => e.Value(EntityQueryColumnName[1]) != EntityQueryValue[1]);
-                                break;
-                            case "contains":
-                                q = q.Where(e => e.Value(EntityQueryColumnName[1]).Contains(EntityQueryValue[1]));
-                                break;
-                            case "starts with":
-                                q = q.Where(e => e.Value(EntityQueryColumnName[1]).StartsWith(EntityQueryValue[1]));
-                                break;
-                            case "ends with":
-                                q = q.Where(e => e.Value(EntityQueryColumnName[1]).EndsWith(EntityQueryValue[1]));
-                                break;
-                        }
-                    }
-
-                    if (EntityQueryColumnName.Length > 2)
-                    {
-                        switch (EntityQueryCondition[2])
-                        {
-                            case "equals":
-                                q = q.Where(e => e.Value(EntityQueryColumnName[2]) == EntityQueryValue[2]);
-                                break;
-                            case "does not equal":
-                                q = q.Where(e => e.Value(EntityQueryColumnName[2]) != EntityQueryValue[2]);
-                                break;
-                            case "contains":
-                                q = q.Where(e => e.Value(EntityQueryColumnName[2]).Contains(EntityQueryValue[2]));
-                                break;
-                            case "starts with":
-                                q = q.Where(e => e.Value(EntityQueryColumnName[2]).StartsWith(EntityQueryValue[2]));
-                                break;
-                            case "ends with":
-                                q = q.Where(e => e.Value(EntityQueryColumnName[2]).EndsWith(EntityQueryValue[2]));
-                                break;
-                        }
-                    }
-
-                    entities = q.ToList();
-                }
-                else
-                {
-                    EntityQuery.IsChecked = false;
-                    entities = table.ExecuteQuery(query).ToList();
-                }
-
-                if (entities != null)
-                {
-                    // Iterate through the list of entities.
-                    // Ensure a bound column exists in the list view for each.
-                    // Add a representation of each entity to the items source for the list view.
-
-                    bool match = false;
-
-                    foreach (ElasticTableEntity entity in entities)
-                    {
-                        match = false;
-
-                        if (EntityTextFilter == null) match = true;
-
-                        if (MaxEntityCountFilter != -1 && containerCount >= MaxEntityCountFilter) break;
-
-                        foreach (KeyValuePair<String, EntityProperty> prop in entity.Properties)
-                        {
-                            AddTableListViewColumn(prop.Key);
-
-                            if (!tempTableColumnNames.ContainsKey(prop.Key))
-                            {
-                                tempTableColumnNames.Add(prop.Key, TableColumnNames[prop.Key]);
-                            }
-                        }
-
-                        EntityItem item = new EntityItem(entity);
-
-                        if (EntityTextFilter != null)
-                        {
-                            if (entity.RowKey.IndexOf(EntityTextFilter, 0, StringComparison.OrdinalIgnoreCase) != -1 ||
-                                entity.PartitionKey.IndexOf(EntityTextFilter, 0, StringComparison.OrdinalIgnoreCase) != -1)
-                            {
-                                match = true;
-                            }
-                            else
-                            {
-                                foreach(KeyValuePair<String, String> field in item.Fields)
-                                {
-                                    if (field.Value.IndexOf(EntityTextFilter, 0, StringComparison.OrdinalIgnoreCase) != -1)
-                                    {
-                                        match = true;
-                                    }
-                                }
-                            }
-                        }
-
-                        if (match)
-                        {
-                            _EntityCollection.Add(item);
-                            containerCount++;
-                        }
-
-                        TableColumnNames = tempTableColumnNames;
-                    }
-                }
-
-
-                if (_EntityCollection != null)
-                {
-                    foreach (EntityItem entity in _EntityCollection)
-                    {
-                        entity.AddMissingFields(TableColumnNames);
-                    }
-                }
-
-                //SortEntityList();
-
-                if (containerCount == 1)
-                {
-                    ContainerDetails.Text = "(1 entity) as of " + DateTime.Now.ToString();
-                }
-                else
-                {
-                    ContainerDetails.Text = "(" + containerCount.ToString() + " entities) as of " + DateTime.Now.ToString();
-                }
-
-                TableListView.ItemsSource = EntityCollection;
-
-                this.Cursor = Cursors.Arrow;
             }
             catch(Exception ex)
             {
-                this.Cursor = Cursors.Arrow;
                 ShowError("Error querying table: " + ex.Message);
             }
+        }
+
+        private void QueryText_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(QueryText.Text))
+            {
+                QueryTextGhost.Opacity = 1;
+            }
+            else
+            {
+                QueryTextGhost.Opacity = 0;
+            }
+        }
+
+        private void QueryEntities_Click(object sender, RoutedEventArgs e)
+        {
+            //if (FolderTree.SelectedItem == null)
+            //{
+            //    MessageBox.Show("Please select a table to query.", "Selection Required", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            //    return;
+            //}
+            TableListView.ItemsSource = null;
+            _EntityCollection.Clear();
+            ViewEntities(ContainerTitle.Text, QueryText.Text.Trim(), EntityMaxRecords());
+        }
+
+        public void ViewEntities(string selectedTableName, string queryString, int maxRecords)
+        {
+            if (string.IsNullOrWhiteSpace(selectedTableName)) return;
+
+            TableColumnNames.Clear();
+
+            if (queryString != null)
+            {
+                queryString = queryString.Replace("\"", "'");
+                queryString = queryString.Replace(" = ", " eq ");
+                queryString = queryString.Replace(" == ", " eq ");
+                queryString = queryString.Replace(" <> ", " ne ");
+                queryString = queryString.Replace(" != ", " ne ");
+                queryString = queryString.Replace(" <= ", " le ");
+                queryString = queryString.Replace(" < ", " lt ");
+                queryString = queryString.Replace(" >= ", " ge ");
+                queryString = queryString.Replace(" > ", " gt ");
+            }
+
+            LoadEntities(selectedTableName, queryString, maxRecords);
+        }
+
+        private void LoadEntities(string tableName, string queryString, int maxRecords)
+        {
+            CloudTable table = tableClient.GetTableReference(tableName);
+
+            // Query the table and retrieve a collection of entities.
+
+            var query = new TableQuery<ElasticTableEntity>();
+
+            IEnumerable<ElasticTableEntity> entities = null;
+
+            int containerCount = 0;
+
+            // Create a temporary copy of the TableColumnNames table and add columns as we encounter them.
+            // This is done to prume away previously saved colum names that are no longer present in the data.
+            Dictionary<String, bool> tempTableColumnNames = new Dictionary<string, bool>();
+
+            AddTableListViewColumn("PartitionKey");
+            AddTableListViewColumn("RowKey");
+            AddTableListViewColumn("Timestamp", false);
+
+            tempTableColumnNames.Add("PartitionKey", TableColumnNames["PartitionKey"]);
+            tempTableColumnNames.Add("RowKey", TableColumnNames["RowKey"]);
+            tempTableColumnNames.Add("Timestamp", TableColumnNames["Timestamp"]);
+
+
+            if (!String.IsNullOrEmpty(queryString))
+            {
+                query = new TableQuery<ElasticTableEntity>().Where(queryString);
+            }
+
+            entities = table.ExecuteQuery(query);
+            foreach (ElasticTableEntity entity in entities)
+            {
+                bool match = false;
+
+                if (EntityTextFilter == null) match = true;
+
+                if (maxRecords != -1 && containerCount >= maxRecords) break;
+
+                foreach (KeyValuePair<String, EntityProperty> prop in entity.Properties)
+                {
+                    AddTableListViewColumn(prop.Key);
+
+                    if (!tempTableColumnNames.ContainsKey(prop.Key))
+                    {
+                        tempTableColumnNames.Add(prop.Key, TableColumnNames[prop.Key]);
+                    }
+                }
+
+                EntityItem item = new EntityItem(entity);
+
+                if (EntityTextFilter != null)
+                {
+                    if (entity.RowKey.IndexOf(EntityTextFilter, 0, StringComparison.OrdinalIgnoreCase) != -1 ||
+                        entity.PartitionKey.IndexOf(EntityTextFilter, 0, StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        match = true;
+                    }
+                    else
+                    {
+                        foreach (KeyValuePair<String, String> field in item.Fields)
+                        {
+                            if (field.Value.IndexOf(EntityTextFilter, 0, StringComparison.OrdinalIgnoreCase) != -1)
+                            {
+                                match = true;
+                            }
+                        }
+                    }
+                }
+
+                if (match)
+                {
+                    _EntityCollection.Add(item);
+
+                    containerCount++;
+                }
+
+                TableColumnNames = tempTableColumnNames;
+            }
+
+            if (_EntityCollection != null)
+            {
+                foreach (EntityItem entity in _EntityCollection)
+                {
+                    entity.AddMissingFields(TableColumnNames);
+                }
+            }
+
+            //SortEntityList();
+
+            if (containerCount == 1)
+            {
+                ContainerDetails.Text = "(1 entity) as of " + DateTime.Now.ToString();
+            }
+            else
+            {
+                ContainerDetails.Text = "(" + containerCount.ToString() + " entities) as of " + DateTime.Now.ToString();
+            }
+
+            TableListView.ItemsSource = EntityCollection;
+        }
+
+        private int EntityMaxRecords()
+        {
+            string text = MaxRowsText.Text.Trim();
+            if (string.IsNullOrEmpty(text))
+            {
+                return -1;
+            }
+            else
+            {
+                try
+                {
+                    return Int32.Parse(text);
+                }
+                catch (Exception)
+                {
+                    return 0;
+                }
+            }
+        }
+
+        // Delete entities matching query condition.
+        private void DeleteEntities_Click(object sender, RoutedEventArgs e)
+        {
+            //string message;
+            //string query = QueryText.Text;
+            //string tableName = (FolderTree.SelectedItem as TreeItem).Text;
+
+            //if (String.IsNullOrEmpty(QueryText.Text))
+            //{
+            //    message = "Are you SURE you want to delete ALL ENTITIES from table '" + tableName + "'?\r\n\r\nEntities will be permanently deleted.";
+            //}
+            //else
+            //{
+            //    message = "Are you SURE you want to delete ALL MATCHING ENTITIES from table '" + tableName + "'?\r\n\r\nEntities will be permanently deleted.";
+
+            //}
+
+            //if (MessageBox.Show(message, "Confirm Delete Entities", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
+            //{
+            //    ViewModel.ClearStatus();
+            //    ViewModel.DeleteEntities(tableName, query);
+            //}
         }
 
 
@@ -4447,78 +4455,78 @@ namespace AzureStorageExplorer
 
         private void LoadDefaultEntityFilter()
         {
-            try
-            {
-                String filename = System.Windows.Forms.Application.UserAppDataPath + "\\AzureStorageExplorer6-DefaultEntityFilter.dt1";
-                String line, name, value;
+            //try
+            //{
+            //    String filename = System.Windows.Forms.Application.UserAppDataPath + "\\AzureStorageExplorer6-DefaultEntityFilter.dt1";
+            //    String line, name, value;
 
-                if (File.Exists(filename))
-                {
-                    using (TextReader reader = File.OpenText(filename))
-                    {
-                        string[] items = null;
-                        while ((line = reader.ReadLine()) != null)
-                        {
-                            items = line.Split('|');
-                            if (items.Length >= 2)
-                            {
-                                name = items[0];
-                                value = items[1];
-                                switch (name)
-                                {
-                                    case "MaxEntityCount":
-                                        MaxEntityCountFilter = Convert.ToInt32(value);
-                                        if (MaxEntityCountFilter <= 0)
-                                        {
-                                            MaxEntityCountFilter = -1;
-                                        }
-                                        break;
-                                    case "EntityText":
-                                        EntityTextFilter = value;
-                                        if (String.IsNullOrEmpty(value))
-                                        {
-                                            EntityTextFilter = null;
-                                        }
-                                        break;
-                                    case "EntitySortHeader":
-                                        EntitySortHeader = value;
-                                        break;
-                                    case "EntitySortDirection":
-                                        switch (value)
-                                        {
-                                            case "D":
-                                                EntitySortDirection = ListSortDirection.Descending;
-                                                break;
-                                            case "A":
-                                            default:
-                                                EntitySortDirection = ListSortDirection.Ascending;
-                                                break;
-                                        }
-                                        break;
-                                } // end switch
-                            } // end if items.Length >= 2
-                        } // end while
-                    } // end using TextReader
+            //    if (File.Exists(filename))
+            //    {
+            //        using (TextReader reader = File.OpenText(filename))
+            //        {
+            //            string[] items = null;
+            //            while ((line = reader.ReadLine()) != null)
+            //            {
+            //                items = line.Split('|');
+            //                if (items.Length >= 2)
+            //                {
+            //                    name = items[0];
+            //                    value = items[1];
+            //                    switch (name)
+            //                    {
+            //                        case "MaxEntityCount":
+            //                            MaxEntityCountFilter = Convert.ToInt32(value);
+            //                            if (MaxEntityCountFilter <= 0)
+            //                            {
+            //                                MaxEntityCountFilter = -1;
+            //                            }
+            //                            break;
+            //                        case "EntityText":
+            //                            EntityTextFilter = value;
+            //                            if (String.IsNullOrEmpty(value))
+            //                            {
+            //                                EntityTextFilter = null;
+            //                            }
+            //                            break;
+            //                        case "EntitySortHeader":
+            //                            EntitySortHeader = value;
+            //                            break;
+            //                        case "EntitySortDirection":
+            //                            switch (value)
+            //                            {
+            //                                case "D":
+            //                                    EntitySortDirection = ListSortDirection.Descending;
+            //                                    break;
+            //                                case "A":
+            //                                default:
+            //                                    EntitySortDirection = ListSortDirection.Ascending;
+            //                                    break;
+            //                            }
+            //                            break;
+            //                    } // end switch
+            //                } // end if items.Length >= 2
+            //            } // end while
+            //        } // end using TextReader
 
-                    // Set Filter toolbar button state
+            //        // Set Filter toolbar button state
 
-                    if (MaxEntityCountFilter != -1 ||
-                        EntityTextFilter != null ||
-                        !AllTableColumnNamesChecked())
-                    {
-                        EntityFilter.IsChecked = true;
-                    }
-                    else
-                    {
-                        EntityFilter.IsChecked = false;
-                    }
+            //        if (MaxEntityCountFilter != -1 ||
+            //            EntityTextFilter != null ||
+            //            !AllTableColumnNamesChecked())
+            //        {
+            //            EntityFilter.IsChecked = true;
+            //        }
+            //        else
+            //        {
+            //            EntityFilter.IsChecked = false;
+            //        }
 
-                } // end if
-            } // end try
-            catch (Exception ex)
-            {
-                //Console.WriteLine(ex.Message);
-            }
+            //    } // end if
+            //} // end try
+            //catch (Exception ex)
+            //{
+            //    //Console.WriteLine(ex.Message);
+            //}
         }
 
         //*****************************
