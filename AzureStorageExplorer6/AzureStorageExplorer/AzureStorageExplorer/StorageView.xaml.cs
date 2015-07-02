@@ -3696,9 +3696,13 @@ namespace AzureStorageExplorer
                 TableListViewGridView.Columns.Clear();
 
                 _EntityCollection.Clear();
+
                 TableListView.Visibility = Visibility.Visible;
                 EntityToolbarPanel.Visibility = Visibility.Visible;
                 QueryPanel.Visibility = Visibility.Visible;
+
+                //Perform refresh of result view
+                QueryEntities_Click(this, null);
             }
             catch(Exception ex)
             {
@@ -4611,7 +4615,7 @@ namespace AzureStorageExplorer
             {
                 if (entities != null)
                 {
-                    CloudTable table = tableClient.GetTableReference(tableName);
+                    //CloudTable table = tableClient.GetTableReference(tableName);
                     //table.CreateIfNotExists();
 
                     if (File.Exists(outputFile))
