@@ -535,7 +535,7 @@ namespace AzureStorageExplorer
 
                     TableColumnNames.Clear();
 
-                    ShowTableContainer(SelectedTableContainer);
+                    ShowTableContainer(SelectedTableContainer, false);
                     break;
                 default:
                     break;
@@ -3685,7 +3685,7 @@ namespace AzureStorageExplorer
         //************************
         // Get and show entities in selected table container. Call from UI thread.
 
-        public void ShowTableContainer(String tableName)
+        public void ShowTableContainer(String tableName, bool refresh = true)
         {
             try
             {
@@ -3701,8 +3701,11 @@ namespace AzureStorageExplorer
                 EntityToolbarPanel.Visibility = Visibility.Visible;
                 QueryPanel.Visibility = Visibility.Visible;
 
-                //Perform refresh of result view
-                QueryEntities_Click(this, null);
+                if (refresh)
+                {
+                    //Perform refresh of result view
+                    QueryEntities_Click(this, null);
+                }
             }
             catch(Exception ex)
             {

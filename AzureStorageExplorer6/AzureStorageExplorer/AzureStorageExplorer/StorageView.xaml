@@ -445,7 +445,7 @@
                                              Foreground="Black"
                                             Click="QueryEntities_Click"
                                             />
-                            <Button Name="DeleteEntities" 
+                            <!--<Button Name="DeleteEntities" 
                                             VerticalAlignment="Center"
                                             Padding="12,2,12,2" Margin="0,0,0,0"
                                             Content="Delete"
@@ -453,7 +453,7 @@
                                             FontFamily="Calibri" FontSize="12"
                                              Foreground="Black"
                                             Click="DeleteEntities_Click"
-                                            />
+                                            />-->
                         </StackPanel>
                     </Grid>
                 </Border>
