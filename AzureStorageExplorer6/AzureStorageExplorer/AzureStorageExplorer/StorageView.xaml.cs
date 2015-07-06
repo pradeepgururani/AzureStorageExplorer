@@ -3732,9 +3732,16 @@ namespace AzureStorageExplorer
             //    MessageBox.Show("Please select a table to query.", "Selection Required", MessageBoxButton.OK, MessageBoxImage.Exclamation);
             //    return;
             //}
+            try
+            { 
             TableListView.ItemsSource = null;
             _EntityCollection.Clear();
             ViewEntities(ContainerTitle.Text, QueryText.Text.Trim(), EntityMaxRecords());
+            }
+            catch(Exception ex)
+            {
+                ShowError("Error querying table: " + ex.Message);
+            }
         }
 
         public void ViewEntities(string selectedTableName, string queryString, int maxRecords)
