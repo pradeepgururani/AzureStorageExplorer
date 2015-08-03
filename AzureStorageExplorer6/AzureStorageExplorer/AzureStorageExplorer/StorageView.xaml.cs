@@ -32,6 +32,8 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Web.Script.Serialization;
 using AzureStorageExplorer.Helpers;
 
+
+
 namespace AzureStorageExplorer
 {
     /// <summary>
@@ -39,6 +41,7 @@ namespace AzureStorageExplorer
     /// </summary>
     public partial class StorageView : UserControl
     {
+        CancellationTokenSource cts;
         #region Class Variables
 
         public const String NULL_VALUE = "NULL ";
@@ -61,7 +64,7 @@ namespace AzureStorageExplorer
 
         public Dictionary<String, bool> TableColumnNames = new Dictionary<string, bool>();
         public ObservableCollection<EntityItem> _EntityCollection = new ObservableCollection<EntityItem>();
-        public ObservableCollection<EntityItem> EntityCollection { get { return _EntityCollection; } }
+        public ObservableCollection<EntityItem> EntityCollection { get { return  _EntityCollection; } }
 
         private int NextAction = 1;
         private Dictionary<int, Action> Actions = new Dictionary<int, Action>();
@@ -3744,6 +3747,16 @@ namespace AzureStorageExplorer
             }
         }
 
+
+
+        private void CancelEntities_Click(object sender, RoutedEventArgs e)
+        {
+            if (cts != null)
+            {
+                cts.Cancel();
+            }
+        }
+
         public void ViewEntities(string selectedTableName, string queryString, int maxRecords)
         {
             if (string.IsNullOrWhiteSpace(selectedTableName)) return;
@@ -3763,10 +3776,10 @@ namespace AzureStorageExplorer
                 queryString = queryString.Replace(" > ", " gt ");
             }
 
-            LoadEntities(selectedTableName, queryString, maxRecords);
+           LoadEntities(selectedTableName, queryString, maxRecords);
         }
 
-        private void LoadEntities(string tableName, string queryString, int maxRecords)
+        private async void LoadEntities(string tableName, string queryString, int maxRecords)
         {
             CloudTable table = tableClient.GetTableReference(tableName);
 
@@ -3775,7 +3788,7 @@ namespace AzureStorageExplorer
             var query = new TableQuery<ElasticTableEntity>();
 
             IEnumerable<ElasticTableEntity> entities = null;
-
+            //List<ElasticTableEntity> entities = new List<ElasticTableEntity>();
             int containerCount = 0;
 
             // Create a temporary copy of the TableColumnNames table and add columns as we encounter them.
@@ -3796,8 +3809,74 @@ namespace AzureStorageExplorer
                 query = new TableQuery<ElasticTableEntity>().Where(queryString);
             }
 
-            entities = table.ExecuteQuery(query);
-            foreach (ElasticTableEntity entity in entities)
+            cts = new CancellationTokenSource();
+            #region MyNewCode
+            var count = 0;
+            List<ElasticTableEntity> entites2 = new List<ElasticTableEntity>();
+            TableContinuationToken continuationToken = null;
+       
+            do
+            {
+                try
+                {
+                    var tableQueryResult = await table.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
+
+                    //if(cts.Token.IsCancellationRequested == true)
+                    //{
+                        
+                    //    break;
+
+                    //}
+
+                    count += tableQueryResult.Count();
+                    if (string.IsNullOrWhiteSpace(queryString))
+                    {
+                        if (maxRecords <= count)
+                        {
+                            continuationToken = null;
+                        }
+                        else
+                        {
+                            continuationToken = tableQueryResult.ContinuationToken;
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(queryString))
+                    {
+                        if (maxRecords <= count)
+                        {
+                            continuationToken = null;
+                        }
+                        else
+                        {
+                            continuationToken = tableQueryResult.ContinuationToken;
+                        }
+                    }
+
+                    entites2.AddRange(tableQueryResult);
+
+                    await Dispatcher.BeginInvoke(new Action<List<ElasticTableEntity>, int, Dictionary<String, bool>, int>(UpdateUIThread),System.Windows.Threading.DispatcherPriority.Normal, entites2, maxRecords, tempTableColumnNames, containerCount);
+
+                }
+                catch(OperationCanceledException ex)
+                {
+                    break;
+                }
+
+                
+            } while (continuationToken != null);
+
+
+            #endregion
+
+           
+        }
+
+        private void UpdateUIThread(List<ElasticTableEntity> entites2 , int maxRecords, Dictionary<String, bool> tempTableColumnNames,int containerCount)
+        {
+
+            entites2.Take(maxRecords).AsParallel();
+            foreach (ElasticTableEntity entity in entites2)
             {
                 bool match = false;
 
@@ -3867,6 +3946,8 @@ namespace AzureStorageExplorer
 
             TableListView.ItemsSource = EntityCollection;
         }
+
+      
 
         private int EntityMaxRecords()
         {
