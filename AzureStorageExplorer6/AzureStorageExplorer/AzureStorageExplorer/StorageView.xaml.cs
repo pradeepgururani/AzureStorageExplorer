@@ -31,6 +31,7 @@ using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Web.Script.Serialization;
 using AzureStorageExplorer.Helpers;
+using System.Text.RegularExpressions;
 
 
 
@@ -3739,7 +3740,9 @@ namespace AzureStorageExplorer
             { 
             TableListView.ItemsSource = null;
             _EntityCollection.Clear();
+ 
             ViewEntities(ContainerTitle.Text, QueryText.Text.Trim(), EntityMaxRecords());
+
             }
             catch(Exception ex)
             {
@@ -3774,10 +3777,21 @@ namespace AzureStorageExplorer
                 queryString = queryString.Replace(" < ", " lt ");
                 queryString = queryString.Replace(" >= ", " ge ");
                 queryString = queryString.Replace(" > ", " gt ");
+
+                queryString = queryString.Replace("=", " eq ");
+                queryString = queryString.Replace("==", " eq ");
+                queryString = queryString.Replace("<>", " ne ");
+                queryString = queryString.Replace("!=", " ne ");
+                queryString = queryString.Replace("<=", " le ");
+                queryString = queryString.Replace("<", " lt ");
+                queryString = queryString.Replace(">=", " ge ");
+                queryString = queryString.Replace(">", " gt ");
             }
 
            LoadEntities(selectedTableName, queryString, maxRecords);
         }
+
+      
 
         private async void LoadEntities(string tableName, string queryString, int maxRecords)
         {
@@ -3862,6 +3876,11 @@ namespace AzureStorageExplorer
                 {
                     break;
                 }
+                catch(Exception ex)
+                {
+                     Dispatcher.BeginInvoke(new ThreadStart(() => ShowError("Error querying table: " + ex.Message)));
+                     continuationToken = null;
+                }
 
                 
             } while (continuationToken != null);
@@ -3874,77 +3893,76 @@ namespace AzureStorageExplorer
 
         private void UpdateUIThread(List<ElasticTableEntity> entites2 , int maxRecords, Dictionary<String, bool> tempTableColumnNames,int containerCount)
         {
-
-            entites2.Take(maxRecords).AsParallel();
-            foreach (ElasticTableEntity entity in entites2)
-            {
-                bool match = false;
-
-                if (EntityTextFilter == null) match = true;
-
-                if (maxRecords != -1 && containerCount >= maxRecords) break;
-
-                foreach (KeyValuePair<String, EntityProperty> prop in entity.Properties)
+                entites2.Take(maxRecords).AsParallel();
+                foreach (ElasticTableEntity entity in entites2)
                 {
-                    AddTableListViewColumn(prop.Key);
+                    bool match = false;
 
-                    if (!tempTableColumnNames.ContainsKey(prop.Key))
-                    {
-                        tempTableColumnNames.Add(prop.Key, TableColumnNames[prop.Key]);
-                    }
-                }
+                    if (EntityTextFilter == null) match = true;
 
-                EntityItem item = new EntityItem(entity);
+                    if (maxRecords != -1 && containerCount >= maxRecords) break;
 
-                if (EntityTextFilter != null)
-                {
-                    if (entity.RowKey.IndexOf(EntityTextFilter, 0, StringComparison.OrdinalIgnoreCase) != -1 ||
-                        entity.PartitionKey.IndexOf(EntityTextFilter, 0, StringComparison.OrdinalIgnoreCase) != -1)
+                    foreach (KeyValuePair<String, EntityProperty> prop in entity.Properties)
                     {
-                        match = true;
-                    }
-                    else
-                    {
-                        foreach (KeyValuePair<String, String> field in item.Fields)
+                        AddTableListViewColumn(prop.Key);
+
+                        if (!tempTableColumnNames.ContainsKey(prop.Key))
                         {
-                            if (field.Value.IndexOf(EntityTextFilter, 0, StringComparison.OrdinalIgnoreCase) != -1)
+                            tempTableColumnNames.Add(prop.Key, TableColumnNames[prop.Key]);
+                        }
+                    }
+
+                    EntityItem item = new EntityItem(entity);
+
+                    if (EntityTextFilter != null)
+                    {
+                        if (entity.RowKey.IndexOf(EntityTextFilter, 0, StringComparison.OrdinalIgnoreCase) != -1 ||
+                            entity.PartitionKey.IndexOf(EntityTextFilter, 0, StringComparison.OrdinalIgnoreCase) != -1)
+                        {
+                            match = true;
+                        }
+                        else
+                        {
+                            foreach (KeyValuePair<String, String> field in item.Fields)
                             {
-                                match = true;
+                                if (field.Value.IndexOf(EntityTextFilter, 0, StringComparison.OrdinalIgnoreCase) != -1)
+                                {
+                                    match = true;
+                                }
                             }
                         }
                     }
+
+                    if (match)
+                    {
+                        _EntityCollection.Add(item);
+
+                        containerCount++;
+                    }
+
+                    TableColumnNames = tempTableColumnNames;
                 }
 
-                if (match)
+                if (_EntityCollection != null)
                 {
-                    _EntityCollection.Add(item);
-
-                    containerCount++;
+                    foreach (EntityItem entity in _EntityCollection)
+                    {
+                        entity.AddMissingFields(TableColumnNames);
+                    }
                 }
 
-                TableColumnNames = tempTableColumnNames;
-            }
+                //SortEntityList();
 
-            if (_EntityCollection != null)
-            {
-                foreach (EntityItem entity in _EntityCollection)
+                if (containerCount == 1)
                 {
-                    entity.AddMissingFields(TableColumnNames);
+                    ContainerDetails.Text = "(1 entity) as of " + DateTime.Now.ToString();
                 }
-            }
+                else
+                {
+                    ContainerDetails.Text = "(" + containerCount.ToString() + " entities) as of " + DateTime.Now.ToString();
+                }
 
-            //SortEntityList();
-
-            if (containerCount == 1)
-            {
-                ContainerDetails.Text = "(1 entity) as of " + DateTime.Now.ToString();
-            }
-            else
-            {
-                ContainerDetails.Text = "(" + containerCount.ToString() + " entities) as of " + DateTime.Now.ToString();
-            }
-
-            TableListView.ItemsSource = EntityCollection;
+                TableListView.ItemsSource = EntityCollection;
         }
 
       
