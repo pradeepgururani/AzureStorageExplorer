@@ -4353,70 +4353,76 @@ namespace AzureStorageExplorer
         {
             // Create task action.
 
-            String message = null;
+                String message = null;
 
-            if (blobs.Length == 1)
-            {
-                message = "Downloading " + blobs.Length.ToString() + " blobs from container " + containerName + " to folder " + folder;
-            }
-            else
-            {
-                message = "Downloading blob " + blobs[0] + " from container " + containerName + " to folder " + folder;
-            }
-
-            Action action = new Action()
-            {
-                Id = NextAction++,
-                ActionType = Action.ACTION_DOWNLOAD_BLOBS,
-                IsCompleted = false,
-                Message = message
-            };
-            Actions.Add(action.Id, action);
-
-            UpdateStatus();
-
-            // Execute background task to perform the downloading.
-
-            Task task = Task.Factory.StartNew(() =>
-            {
-                if (blobs != null)
+                if (blobs.Length == 1)
                 {
-                    CloudBlobContainer container = blobClient.GetContainerReference(containerName);
-                    container.CreateIfNotExists();
-
-                    foreach (String name in blobs)
-                    {
-                        String blobName = name;
-                        int index = blobName.LastIndexOf("\\");
-                        if (index != -1)
-                        {
-                            blobName = blobName.Substring(index + 1);
-                        }
-                        CloudBlockBlob blob = container.GetBlockBlobReference(blobName);
-
-                        // Upload content to the blob, which will create the blob if it does not already exist.
-                        //blob.UploadFromFileAsync(file);
-                        //blob.UploadFromFile(file, System.IO.FileMode.Open);
-
-                        String path = folder + "\\" + blobName;
-                        if (File.Exists(path))
-                        {
-                            File.Delete(path);
-                        }
-
-                        blob.DownloadToFile(path, System.IO.FileMode.CreateNew);
-                    }
+                    message = "Downloading " + blobs.Length.ToString() + " blobs from container " + containerName + " to folder " + folder;
+                }
+                else
+                {
+                    message = "Downloading blob " + blobs[0] + " from container " + containerName + " to folder " + folder;
                 }
 
-                Actions[action.Id].IsCompleted = true;
-            });
+                Action action = new Action()
+                {
+                    Id = NextAction++,
+                    ActionType = Action.ACTION_DOWNLOAD_BLOBS,
+                    IsCompleted = false,
+                    Message = message
+                };
+                Actions.Add(action.Id, action);
 
-            // Task complete - update UI.
-
-            task.ContinueWith((t) =>
-            {
                 UpdateStatus();
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+
+                // Execute background task to perform the downloading.
+
+                Task task = Task.Factory.StartNew(() =>
+                {
+                    if (blobs != null)
+                    {
+                        CloudBlobContainer container = blobClient.GetContainerReference(containerName);
+                        container.CreateIfNotExists();
+
+                        foreach (String name in blobs)
+                        {
+                            String blobName = name;
+                            int index = blobName.LastIndexOf("\\");
+                            if (index != -1)
+                            {
+                                blobName = blobName.Substring(index + 1);
+                            }
+                            CloudBlockBlob blob = container.GetBlockBlobReference(blobName);
+
+                            // Upload content to the blob, which will create the blob if it does not already exist.
+                            //blob.UploadFromFileAsync(file);
+                            //blob.UploadFromFile(file, System.IO.FileMode.Open);
+
+                            
+                            String path = folder + "\\" + blobName;
+                            if (File.Exists(path))
+                            {
+                                File.Delete(path);
+                            }
+
+                            if(path.Contains("/"))
+                            {
+                               path = path.Replace("/", "");
+                            }
+
+                            blob.DownloadToFile(path, System.IO.FileMode.CreateNew);
+                        }
+                    }
+
+                    Actions[action.Id].IsCompleted = true;
+                });
+
+                // Task complete - update UI.
+
+                task.ContinueWith((t) =>
+                {
+                    UpdateStatus();
+                }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         #endregion
