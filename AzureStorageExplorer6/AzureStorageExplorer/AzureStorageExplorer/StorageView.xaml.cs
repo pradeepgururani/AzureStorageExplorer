@@ -3835,12 +3835,12 @@ namespace AzureStorageExplorer
                 {
                     var tableQueryResult = await table.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
 
-                    //if(cts.Token.IsCancellationRequested == true)
-                    //{
-                        
-                    //    break;
+                    if (cts.Token.IsCancellationRequested == true)
+                    {
 
-                    //}
+                        break;
+
+                    }
 
                     count += tableQueryResult.Count();
                     if (string.IsNullOrWhiteSpace(queryString))
